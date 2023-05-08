@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.1)
-project(ice9-bluetooth C)
+cmake_minimum_required(VERSION 3.9)
+project(ice9-bluetooth)
+
+set (CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 
@@ -83,6 +85,7 @@ target_link_libraries(ice9-bluetooth
 )
 
 set_property(TARGET ice9-bluetooth PROPERTY C_STANDARD 99)
+set_property(TARGET ice9-bluetooth PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 install(TARGETS ice9-bluetooth DESTINATION ${EXTCAP_INSTALL_PATH})
 
