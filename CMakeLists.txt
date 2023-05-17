@@ -13,13 +13,6 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -ggdb3 -g3")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address")
 
-# Installation directory
-set(EXTCAP_INSTALL_PATH $ENV{EXTCAP_INSTALL_PATH})
-if(EXTCAP_INSTALL_PATH)
-else()
-  set(EXTCAP_INSTALL_PATH "$ENV{HOME}/.config/wireshark/extcap")
-endif()
-
 # Prefer pthreads
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -87,7 +80,7 @@ target_link_libraries(ice9-bluetooth
 set_property(TARGET ice9-bluetooth PROPERTY C_STANDARD 99)
 set_property(TARGET ice9-bluetooth PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 
-install(TARGETS ice9-bluetooth DESTINATION ${EXTCAP_INSTALL_PATH})
+install(TARGETS ice9-bluetooth DESTINATION bin)
 
 # uninstall target
 if(NOT TARGET uninstall)
