@@ -148,7 +148,7 @@ void fsk_demod(fsk_demod_t *fsk, float complex *burst, unsigned burst_len, unsig
     if (fabsf(demod[0]) > 1.5f) demod[0] = 0;
     silence_offset = silence_skip(demod, burst_len);
 
-    uint8_t *bits = malloc((burst_len - silence_offset)/2);
+    uint8_t *bits = malloc(burst_len - silence_offset); // over-alloc by 2
     unsigned len = 0;
     for (i = silence_offset+1; i < burst_len; i+=2) {
         uint8_t bit = demod[i] > 0;
