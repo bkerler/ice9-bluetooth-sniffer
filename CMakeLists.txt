@@ -54,8 +54,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${HACKRF_INCLUDE_DIR})
-include_directories(${BLADERF_INCLUDE_DIR})
+include_directories(${LIBHACKRF_INCLUDE_DIR})
+include_directories(${LIBBLADERF_INCLUDE_DIR})
 include_directories(${UHD_INCLUDE_DIR})
 include_directories(${LIQUID_INCLUDE_DIR})
 include_directories(${BTBB_INCLUDE_DIR})
@@ -84,8 +84,9 @@ add_executable(ice9-bluetooth
 
 target_link_libraries(ice9-bluetooth
     PRIVATE Threads::Threads
-    ${HACKRF_LIBRARIES}
-    ${BLADERF_LIBRARIES}
+    m
+    ${LIBHACKRF_LIBRARIES}
+    ${LIBBLADERF_LIBRARIES}
     ${UHD_LIBRARIES}
     ${LIQUID_LIBRARIES}
     ${BTBB_LIBRARIES}
