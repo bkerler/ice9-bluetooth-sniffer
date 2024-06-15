@@ -5,6 +5,7 @@
 #define _GNU_SOURCE
 #include <complex.h>
 #include <err.h>
+#include <limits.h>
 #include <locale.h>
 #include <math.h>
 #include <pthread.h>
@@ -15,9 +16,11 @@
 #include <time.h>
 #include <unistd.h>
 
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <liquid/liquid.h>
 
 #include "bladerf.h"
+#include "soapysdr.h"
 #include "bluetooth.h"
 #include "btbb/btbb.h"
 #include "burst_catcher.h"
@@ -44,10 +47,11 @@ FILE *in = NULL;
 char *serial = NULL;
 char *usrp_serial = NULL;
 int bladerf_num = -1;
+int soapysdr_num = -1;
 int verbose = 0;
 int stats = 0;
 
-sig_atomic_t running = 1;
+volatile sig_atomic_t running = 1;
 pid_t self_pid;
 
 unsigned sps(void) { return (unsigned)(samp_rate / channels / 1e6f * 2.0f); }
@@ -57,6 +61,7 @@ const float lp_cutoff = 0.75f; // cutoff in MHz
 const unsigned m = 4; // magical polyphase filter bank number (filter half-length)
 
 #define AGC_BUFFER_SIZE 4096
+#define BATCH_SIZE 4096
 typedef struct _agc_buffer_t {
     float complex buffer[AGC_BUFFER_SIZE];
 } agc_buffer_t;
@@ -412,8 +417,9 @@ int main(int argc, char **argv) {
     // char *out_filename = NULL;
     hackrf_device *hackrf = NULL;
     struct bladerf *bladerf = NULL;
+    struct SoapySDRDevice *soapysdr = NULL;
     uhd_usrp_handle usrp = NULL;
-    pthread_t bladerf_thread, usrp_thread;
+    pthread_t bladerf_thread, usrp_thread, soapysdr_thread;
 
     signal(SIGINT, sig);
     signal(SIGTERM, sig);
@@ -431,6 +437,8 @@ int main(int argc, char **argv) {
             bladerf = bladerf_setup(bladerf_num);
         else if (usrp_serial != NULL)
             usrp = usrp_setup(usrp_serial);
+        else if (soapysdr_num >= 0)
+            soapysdr = soapysdr_setup(soapysdr_num);
         else
             hackrf = hackrf_setup();
     }
@@ -456,6 +464,8 @@ int main(int argc, char **argv) {
             hackrf_start_rx(hackrf, hackrf_rx_cb, NULL);
         else if (usrp != NULL)
             pthread_create(&usrp_thread, NULL, usrp_stream_thread, (void *)usrp);
+        else if (soapysdr != NULL)
+            pthread_create(&soapysdr_thread, NULL, soapysdr_stream_thread, (void *)soapysdr);
         else
             pthread_create(&bladerf_thread, NULL, bladerf_stream_thread, (void *)bladerf);
     }
@@ -474,6 +484,8 @@ int main(int argc, char **argv) {
             hackrf_stop_rx(hackrf);
         else if (usrp != NULL)
             ; // do nothing (stream is stopped in thread)
+        else if (soapysdr != NULL)
+            ; // do nothing (stream is stopped in thread)
         else
             bladerf_enable_module(bladerf, BLADERF_MODULE_RX, false);
     }
@@ -487,6 +499,8 @@ int main(int argc, char **argv) {
         } else if (usrp != NULL) {
             pthread_join(usrp_thread, NULL);
             usrp_close(usrp);
+        } else if (soapysdr != NULL) {
+            pthread_join(soapysdr_thread, NULL);
         } else {
             pthread_join(bladerf_thread, NULL);
             bladerf_close(bladerf);

@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <complex.h>
 #include <uhd.h>
 
 #include "sdr.h"
